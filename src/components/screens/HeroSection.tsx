@@ -11,17 +11,23 @@ export default function HeroSection({ onStart }: HeroSectionProps) {
       <div className={styles.content}>
         <header className={styles.copy}>
           <h1 className={styles.title}>{HERO_COPY.heading}</h1>
-          <div className={styles.introGroup}>
-            {HERO_COPY.intro.map((paragraph) => (
-              <p className={styles.intro} key={paragraph}>
-                {paragraph}
+          <p className={styles.subhead}>{HERO_COPY.subhead}</p>
+          <p className={styles.frame}>{HERO_COPY.frame}</p>
+
+          <div className={styles.bodyGroup}>
+            {HERO_COPY.body.map((line) => (
+              <p className={styles.body} key={line}>
+                {line}
               </p>
             ))}
           </div>
 
           <button className={styles.cta} onClick={onStart} type="button">
-            {HERO_COPY.primaryCtaLabel}
+            {HERO_COPY.ctaLabel}
           </button>
+
+          <p className={styles.proof}>{HERO_COPY.proof}</p>
+          <p className={styles.footer}>{HERO_COPY.footer}</p>
         </header>
       </div>
     </section>

@@ -6,14 +6,35 @@ import HeroSection from './components/screens/HeroSection'
 import QuizSection from './components/screens/QuizSection'
 import ResultsSection from './components/screens/ResultsSection'
 import {
-  type AnswerValue,
-  type DiagnosticStage,
-  calculateDiagnostic,
+  DEFAULT_LEAD_VALUES,
   OWNER_EMAIL,
   QUESTIONS,
+  calculateDiagnostic,
+  type AnswerValue,
+  type DiagnosticStage,
+  type LeadFormValues,
 } from './data/diagnostic'
 import { sendDiagnosticEmails } from './lib/email'
-import { clearSession, loadSession, saveSession } from './lib/storage'
+import { clearSession, loadSession, saveLead, saveSession } from './lib/storage'
+
+function hasAdminQueryParam() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  return new URLSearchParams(window.location.search).get('admin') === 'true'
+}
+
+function ensureAdminLead(lead: LeadFormValues): LeadFormValues {
+  if (lead.workEmail.trim()) {
+    return lead
+  }
+
+  return {
+    ...lead,
+    workEmail: OWNER_EMAIL,
+  }
+}
 
 function App() {
   const [initialSession] = useState(() => loadSession())
@@ -21,11 +42,12 @@ function App() {
   const [answers, setAnswers] = useState<AnswerValue[]>(initialSession.answers)
   const [activeQuestion, setActiveQuestion] = useState<number>(initialSession.activeQuestion)
   const [selectedAnswer, setSelectedAnswer] = useState<AnswerValue | null>(null)
-  const [email, setEmail] = useState(initialSession.email)
+  const [lead, setLead] = useState<LeadFormValues>(initialSession.lead)
   const [sendingResults, setSendingResults] = useState(false)
+  const [adminBypass, setAdminBypass] = useState(initialSession.adminBypass || hasAdminQueryParam())
 
   const answerTimeoutRef = useRef<number | null>(null)
-  const ownerBypassRef = useRef(false)
+  const bypassGuardRef = useRef(false)
   const gateFormRef = useRef<HTMLFormElement | null>(null)
 
   const currentQuestion = QUESTIONS[activeQuestion]
@@ -36,9 +58,10 @@ function App() {
       stage,
       answers,
       activeQuestion,
-      email,
+      lead,
+      adminBypass,
     })
-  }, [stage, answers, activeQuestion, email])
+  }, [stage, answers, activeQuestion, lead, adminBypass])
 
   useEffect(() => {
     document.body.dataset.stage = stage
@@ -62,10 +85,9 @@ function App() {
       setStage('hero')
       setAnswers([])
       setActiveQuestion(0)
+      setLead(DEFAULT_LEAD_VALUES)
     }
   }, [diagnostic, stage])
-
-  const progressPercentage = ((activeQuestion + (stage !== 'quiz' ? 1 : 0)) / QUESTIONS.length) * 100
 
   const handleStart = () => {
     if (answerTimeoutRef.current !== null) {
@@ -77,9 +99,48 @@ function App() {
     setAnswers([])
     setActiveQuestion(0)
     setSelectedAnswer(null)
-    setEmail('')
+    setLead(DEFAULT_LEAD_VALUES)
+    setSendingResults(false)
+    setAdminBypass(hasAdminQueryParam())
     setStage('quiz')
   }
+
+  const unlockResults = useCallback(
+    async (nextLead: LeadFormValues, nextAdminBypass: boolean) => {
+      if (!diagnostic) {
+        return
+      }
+
+      const finalLead = nextAdminBypass ? ensureAdminLead(nextLead) : nextLead
+
+      setLead(finalLead)
+      setAdminBypass(nextAdminBypass)
+      saveLead(finalLead)
+      setStage('results')
+      setSendingResults(true)
+
+      try {
+        await sendDiagnosticEmails({
+          lead: finalLead,
+          score: diagnostic.roundedScore,
+          state: diagnostic.state,
+          headline: diagnostic.content.headline,
+          executiveSummary: diagnostic.content.executiveSummary,
+          forecastImplication: diagnostic.content.forecastImplication,
+          executiveAction: diagnostic.content.executiveAction,
+          topRisks: diagnostic.content.topRisks,
+          urgency: diagnostic.content.urgency,
+          primaryCtaLabel: diagnostic.content.primaryCtaLabel,
+          secondaryCtaLabel: diagnostic.content.secondaryCtaLabel,
+        })
+      } catch (error) {
+        console.error('Failed to send diagnostic emails.', error)
+      } finally {
+        setSendingResults(false)
+      }
+    },
+    [diagnostic],
+  )
 
   const handleAnswer = (value: AnswerValue) => {
     if (selectedAnswer !== null) {
@@ -89,63 +150,49 @@ function App() {
     setSelectedAnswer(value)
 
     answerTimeoutRef.current = window.setTimeout(() => {
-      setAnswers((previousAnswers) => [...previousAnswers, value])
       const nextQuestion = activeQuestion + 1
+      const canBypass = hasAdminQueryParam() || adminBypass
+
+      setAnswers((previousAnswers) => [...previousAnswers, value])
+      setSelectedAnswer(null)
 
       if (nextQuestion < QUESTIONS.length) {
         setActiveQuestion(nextQuestion)
-      } else {
-        setStage('gate')
+        return
       }
 
-      setSelectedAnswer(null)
+      if (canBypass) {
+        setAdminBypass(true)
+      }
+
+      setStage('gate')
     }, 200)
   }
 
-  const unlockResults = useCallback(async (nextEmail: string) => {
-    if (!diagnostic) {
-      return
-    }
-
-    const trimmedEmail = nextEmail.trim()
-
-    setEmail(trimmedEmail)
-    setStage('results')
-    setSendingResults(true)
-
-    try {
-      await sendDiagnosticEmails({
-        email: trimmedEmail,
-        score: diagnostic.roundedScore,
-        state: diagnostic.state,
-        dealStatus: diagnostic.content.dealStatus,
-        forecastImpact: diagnostic.content.forecastImpact,
-        recommendation: diagnostic.content.recommendation,
-        categoryScores: diagnostic.categoryScores,
-        risks: diagnostic.content.risks,
-        actions: diagnostic.content.actions,
-        executiveRecommendations: diagnostic.content.executiveRecommendations,
-      })
-    } catch (error) {
-      console.error('Failed to send diagnostic emails.', error)
-    } finally {
-      setSendingResults(false)
-    }
-  }, [diagnostic])
-
   useEffect(() => {
     if (stage !== 'gate') {
-      ownerBypassRef.current = false
+      bypassGuardRef.current = false
       return
     }
 
-    if (!diagnostic || ownerBypassRef.current || email.trim().toLowerCase() !== OWNER_EMAIL) {
+    const bypassByEmail = lead.workEmail.trim().toLowerCase() === OWNER_EMAIL
+    const bypassByUrl = hasAdminQueryParam()
+    const canBypass = diagnostic && (bypassByEmail || bypassByUrl || adminBypass)
+
+    if (!canBypass || bypassGuardRef.current) {
       return
     }
 
-    ownerBypassRef.current = true
-    void unlockResults(email)
-  }, [diagnostic, email, stage, unlockResults])
+    bypassGuardRef.current = true
+    void unlockResults(ensureAdminLead(lead), true)
+  }, [adminBypass, diagnostic, lead, stage, unlockResults])
+
+  const handleLeadChange = <K extends keyof LeadFormValues>(field: K, value: LeadFormValues[K]) => {
+    setLead((previousLead) => ({
+      ...previousLead,
+      [field]: value,
+    }))
+  }
 
   const handleUnlockResults = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -154,7 +201,9 @@ function App() {
       return
     }
 
-    await unlockResults(email)
+    const bypassByEmail = lead.workEmail.trim().toLowerCase() === OWNER_EMAIL
+    const bypassByUrl = hasAdminQueryParam()
+    await unlockResults(lead, bypassByEmail || bypassByUrl)
   }
 
   return (
@@ -162,20 +211,14 @@ function App() {
       {stage === 'hero' && <HeroSection onStart={handleStart} />}
 
       {stage === 'quiz' && currentQuestion && (
-        <QuizSection
-          activeQuestion={activeQuestion}
-          currentQuestion={currentQuestion}
-          onAnswer={handleAnswer}
-          progressPercentage={progressPercentage}
-          selectedAnswer={selectedAnswer}
-        />
+        <QuizSection currentQuestion={currentQuestion} onAnswer={handleAnswer} selectedAnswer={selectedAnswer} />
       )}
 
       {stage === 'gate' && diagnostic && (
         <GateSection
-          email={email}
           formRef={gateFormRef}
-          onEmailChange={setEmail}
+          lead={lead}
+          onLeadChange={handleLeadChange}
           onSubmit={handleUnlockResults}
           sendingResults={sendingResults}
         />

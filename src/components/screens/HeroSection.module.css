@@ -3,75 +3,101 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 24px;
+  padding: 32px 20px;
 }
 
 .content {
-  width: min(760px, 100%);
+  width: min(720px, 100%);
   margin: 0 auto;
 }
 
 .copy {
   display: grid;
   gap: 24px;
-  max-width: 760px;
-  justify-items: center;
-  text-align: center;
 }
 
 .title {
-  max-width: 620px;
-  font-size: 40px;
+  font-size: 48px;
   font-weight: 700;
-  line-height: 1.02;
-  text-transform: uppercase;
+  line-height: 1.1;
+  animation: fadeIn 0.6s ease both;
 }
 
-.introGroup {
-  display: grid;
-  gap: 16px;
-  justify-items: center;
+.subhead {
+  color: var(--text-primary);
+  font-size: 20px;
+  line-height: 1.4;
 }
 
-.intro {
-  max-width: 700px;
+.frame {
   color: var(--text-secondary);
   font-size: 16px;
   line-height: 1.5;
 }
 
+.bodyGroup {
+  display: grid;
+  gap: 12px;
+}
+
+.body,
+.proof,
+.footer {
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
 .cta {
-  display: block;
-  width: fit-content;
-  max-width: 100%;
-  margin: 8px 0 0;
+  width: 100%;
+  min-height: 52px;
   border: none;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #6d5cff 0%, #8c5eff 100%);
+  border-radius: 10px;
+  background: linear-gradient(90deg, #7b3ff2 0%, #5b21b6 100%);
+  box-shadow: 0 0 24px rgba(123, 63, 242, 0.22);
   color: #ffffff;
-  padding: 18px 24px;
+  padding: 16px 24px;
   font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  text-align: center;
   cursor: pointer;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
+  animation: pulse 3s ease-in-out infinite;
 }
 
 .cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(109, 92, 255, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 0 28px rgba(123, 63, 242, 0.28);
 }
 
-@media (max-width: 1024px) {
-  .screen {
-    padding: 24px 16px 48px;
+.proof {
+  color: var(--text-secondary);
+}
+
+.footer {
+  color: var(--text-secondary);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
 
-  .cta {
-    width: 100%;
-    max-width: 320px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 18px rgba(123, 63, 242, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 28px rgba(123, 63, 242, 0.32);
   }
 }

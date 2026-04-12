@@ -1,40 +1,27 @@
-.shell {
-  display: grid;
-  justify-items: center;
-  gap: 16px;
-}
-
 .ring {
-  --score-color: #6d5cff;
-  width: 320px;
+  --score-color: #7b3ff2;
+  width: 260px;
   aspect-ratio: 1;
   display: grid;
   place-items: center;
+  border: 4px solid var(--score-color);
   border-radius: 50%;
-  border: 6px solid var(--score-color);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .value {
-  font-size: 96px;
+  color: var(--text-primary);
+  font-size: 72px;
   font-weight: 700;
   line-height: 1;
 }
 
-.label {
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .ring {
-    width: min(280px, 100%);
+    width: min(220px, 100%);
   }
 
   .value {
-    font-size: 72px;
+    font-size: 60px;
   }
 }

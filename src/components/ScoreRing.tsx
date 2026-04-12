@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react'
+
 import styles from './ScoreRing.module.css'
 
 interface ScoreRingProps {
@@ -30,13 +31,8 @@ export default function ScoreRing({ score, color }: ScoreRingProps) {
   }, [score])
 
   return (
-    <div className={styles.shell}>
-      <div className={styles.ring} style={{ '--score-color': color } as CSSProperties}>
-        <div className={styles.value} id="score">
-          {displayScore}
-        </div>
-      </div>
-      <div className={styles.label}>FORECAST RELIABILITY</div>
+    <div className={styles.ring} style={{ '--score-color': color } as CSSProperties}>
+      <div className={styles.value}>{displayScore}</div>
     </div>
   )
 }

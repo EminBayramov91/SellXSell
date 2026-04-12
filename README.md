@@ -9,7 +9,7 @@ React + TypeScript + Vite implementation of the SellXSell revenue diagnostic flo
 - Email gate before results
 - Weighted scoring across ICP, MEDDIC, and Internal Alignment
 - Dynamic results states: green, yellow, red
-- CTA section for the paid diagnostic and secondary pressure test
+- CTA section for booking a 30-minute pipeline pressure test
 
 ## Tech Stack
 
@@ -47,7 +47,6 @@ Required for email sending:
 Optional CTA overrides:
 
 - `VITE_PRIMARY_CTA_URL`
-- `VITE_SECONDARY_CTA_URL`
 
 If EmailJS variables are missing, the app still works, but email sending is skipped.
 
@@ -82,3 +81,4 @@ src/
 - The results flow is driven by the spec-defined question set and score thresholds.
 - Session state is persisted in localStorage.
 - `shelley@sellxsell.com` bypasses the gate automatically.
+- The default primary CTA points to a Calendly placeholder until the final booking link is provided.

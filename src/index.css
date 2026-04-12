@@ -1,6 +1,6 @@
 :root {
   color: #ffffff;
-  background: #0b0b0f;
+  background: #05070d;
   font-family:
     Inter,
     -apple-system,
@@ -13,19 +13,12 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --background: #0b0b0f;
-  --surface: #10111a;
-  --surface-strong: #161826;
-  --surface-outline: rgba(255, 255, 255, 0.1);
+  --background: #05070d;
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.72);
-  --text-muted: rgba(255, 255, 255, 0.5);
-  --purple: #6d5cff;
-  --purple-soft: rgba(109, 92, 255, 0.18);
-  --green: #22c55e;
-  --yellow: #facc15;
-  --red: #ef4444;
-  --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  --text-muted: rgba(255, 255, 255, 0.54);
+  --accent: #7b61ff;
+  --accent-strong: #7b3ff2;
 }
 
 * {
@@ -41,8 +34,8 @@ body,
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top, rgba(109, 92, 255, 0.18), transparent 28%),
-    linear-gradient(180deg, #0b0b0f 0%, #090b14 100%);
+    radial-gradient(circle at top, rgba(123, 63, 242, 0.18), transparent 28%),
+    #05070d;
   color: var(--text-primary);
 }
 
