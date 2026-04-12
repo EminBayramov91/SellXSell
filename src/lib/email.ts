@@ -1,6 +1,6 @@
 import emailjs from '@emailjs/browser'
 
-import { CTA_LINKS, type DiagnosticState, type LeadFormValues } from '../data/diagnostic'
+import { CTA_LINKS, OWNER_EMAIL, type DiagnosticState, type LeadFormValues } from '../data/diagnostic'
 
 export interface DiagnosticEmailPayload {
   lead: LeadFormValues
@@ -25,9 +25,19 @@ export const emailConfigurationReady = Boolean(
   serviceId && publicKey && userTemplateId && ownerTemplateId,
 )
 
-function buildTemplateParams(payload: DiagnosticEmailPayload) {
+function normalizeEmail(value: string) {
+  return value.trim().toLowerCase()
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+function buildBaseTemplateParams(payload: DiagnosticEmailPayload) {
+  const executiveAction = payload.executiveAction.join('\n')
+  const topRisks = payload.topRisks.join('\n')
+
   return {
-    user_email: payload.lead.workEmail,
     first_name: payload.lead.firstName,
     company_name: payload.lead.companyName,
     role: payload.lead.role,
@@ -38,32 +48,65 @@ function buildTemplateParams(payload: DiagnosticEmailPayload) {
     headline: payload.headline,
     executive_summary: payload.executiveSummary,
     forecast_implication: payload.forecastImplication,
-    executive_action: payload.executiveAction.join(' | '),
-    top_risks: payload.topRisks.join(' | '),
+    executive_action: executiveAction,
+    top_risks: topRisks,
+    risks: topRisks,
     urgency: payload.urgency,
     primary_cta_label: payload.primaryCtaLabel,
     primary_cta_url: CTA_LINKS.primary,
     secondary_cta_label: payload.secondaryCtaLabel,
     secondary_cta_url: CTA_LINKS.secondary,
+    icp: '',
+    meddic: '',
+    internal: '',
+  }
+}
+
+function buildTemplateParams(payload: DiagnosticEmailPayload, recipientEmail: string) {
+  const normalizedUserEmail = normalizeEmail(payload.lead.workEmail)
+  const normalizedRecipient = normalizeEmail(recipientEmail)
+
+  return {
+    ...buildBaseTemplateParams(payload),
+    email: normalizedRecipient,
+    to_email: normalizedRecipient,
+    recipient_email: normalizedRecipient,
+    user_email: normalizedUserEmail,
+    work_email: normalizedUserEmail,
+    owner_email: OWNER_EMAIL,
+    reply_to: normalizedUserEmail,
   }
 }
 
 export async function sendDiagnosticEmails(payload: DiagnosticEmailPayload) {
+  const normalizedUserEmail = normalizeEmail(payload.lead.workEmail)
+
   if (
     !emailConfigurationReady ||
     !serviceId ||
     !publicKey ||
     !userTemplateId ||
     !ownerTemplateId ||
-    !payload.lead.workEmail
+    !isValidEmail(normalizedUserEmail)
   ) {
     return
   }
 
-  const templateParams = buildTemplateParams(payload)
+  const userTemplateParams = buildTemplateParams(payload, normalizedUserEmail)
+  const ownerTemplateParams = buildTemplateParams(payload, OWNER_EMAIL)
 
-  await Promise.all([
-    emailjs.send(serviceId, userTemplateId, templateParams, { publicKey }),
-    emailjs.send(serviceId, ownerTemplateId, templateParams, { publicKey }),
+  const results = await Promise.allSettled([
+    emailjs.send(serviceId, userTemplateId, userTemplateParams, { publicKey }),
+    emailjs.send(serviceId, ownerTemplateId, ownerTemplateParams, { publicKey }),
   ])
+
+  const [userResult, ownerResult] = results
+
+  if (userResult.status === 'rejected') {
+    console.warn('User diagnostic email failed to send.', userResult.reason)
+  }
+
+  if (ownerResult.status === 'rejected') {
+    console.warn('Owner diagnostic email failed to send.', ownerResult.reason)
+  }
 }
