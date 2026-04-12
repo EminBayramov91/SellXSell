@@ -37,7 +37,7 @@ export default function GateSection({
             className={styles.input}
             name="firstName"
             onChange={(event) => onLeadChange('firstName', event.target.value)}
-            placeholder="First Name"
+            placeholder="First Name *"
             required
             value={lead.firstName}
           />
@@ -47,7 +47,7 @@ export default function GateSection({
             className={styles.input}
             name="email"
             onChange={(event) => onLeadChange('workEmail', event.target.value)}
-            placeholder="Work Email"
+            placeholder="Work Email *"
             required
             type="email"
             value={lead.workEmail}
@@ -57,7 +57,7 @@ export default function GateSection({
             className={styles.input}
             name="company"
             onChange={(event) => onLeadChange('companyName', event.target.value)}
-            placeholder="Company Name"
+            placeholder="Company Name *"
             required
             value={lead.companyName}
           />
