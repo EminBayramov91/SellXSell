@@ -121,20 +121,18 @@ export const GATE_COPY = {
   buttonLabel: 'Reveal My Deal Reality',
 }
 
-const SHARED_CTA_HEADING = 'Validate your next two quarters of forecast'
+const SHARED_CTA_HEADING = 'Next step: Pressure test your pipeline live'
 const SHARED_CTA_BODY =
-  'Bring your forecasted deals across the next two quarters. We will show you what is real, what is at risk, and what should be removed from your forecast.'
+  'In this 30-minute working session, we will go directly into 3-5 of your active deals. This is not a review of your results. You will leave with a clear view of what is real, what is at risk, and what needs to change immediately.'
 const SHARED_PRIMARY_CTA_LABEL = 'Pressure Test My Pipeline Live'
 export const COPY_DIAGNOSTIC_LABEL = 'Copy This Diagnostic'
 export const COPY_DIAGNOSTIC_HELPER =
   'Share this diagnostic with your leadership team before the forecast call.'
 
 const SHARED_VALUE_STACK = [
-  'Full pipeline diagnostic across your forecast for the next two quarters',
-  'Deep analysis across ICP, MEDDIC, and internal alignment',
-  'Identification of what is real, what is at risk, and what should be removed from your forecast',
-  'Clear executive recommendation on what to commit, remove, and rebuild',
-  'Up to 3 team members included in the session',
+  'Where deals are actually breaking',
+  'What is qualified vs. assumed',
+  'Where you are losing control of the deal',
 ]
 
 export const RESULT_CONTENT: Record<DiagnosticState, ResultStateContent> = {
