@@ -26,18 +26,95 @@ function getStateClass(state: CalculatedDiagnostic['state']) {
 }
 
 const COPIED_CTA_LABEL = 'Copied \u2713'
+const COPY_FAILED_CTA_LABEL = 'Copy Failed'
+
+function formatList(items: string[]) {
+  return items.map((item) => `- ${item}`).join('\n')
+}
+
+function getDiagnosticShareText(diagnostic: CalculatedDiagnostic) {
+  const currentLink = typeof window === 'undefined' ? CTA_LINKS.primary : window.location.href
+  const categoryScores = [
+    `ICP: ${diagnostic.icpScore}%`,
+    `MEDDIC: ${diagnostic.meddicScore}%`,
+    `INTERNAL ALIGNMENT: ${diagnostic.internalScore}%`,
+  ].join(' | ')
+
+  return [
+    'SellXSell Revenue Diagnostic',
+    '',
+    `Score: ${diagnostic.roundedScore}%`,
+    `Result: ${diagnostic.content.headline}`,
+    `Deal Status: ${diagnostic.content.dealStatus}`,
+    `Forecast Impact: ${diagnostic.content.forecastImpact}`,
+    `Recommendation: ${diagnostic.content.recommendation}`,
+    '',
+    `Category Scores: ${categoryScores}`,
+    '',
+    'Executive Summary:',
+    diagnostic.content.executiveSummary,
+    '',
+    'Forecast Statement:',
+    diagnostic.content.forecastStatement,
+    '',
+    'Executive Recommendations:',
+    formatList(diagnostic.content.executiveActions),
+    '',
+    'Top Risks:',
+    formatList(diagnostic.content.topRisks),
+    '',
+    'Share Link:',
+    currentLink,
+    '',
+    'Pressure Test:',
+    CTA_LINKS.primary,
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
+async function copyTextToClipboard(text: string) {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text)
+      return true
+    } catch {
+      // Fall through to the textarea copy path for Windows/browser iframe edge cases.
+    }
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', '')
+  textarea.style.position = 'fixed'
+  textarea.style.top = '0'
+  textarea.style.left = '-9999px'
+  textarea.style.opacity = '0'
+
+  document.body.appendChild(textarea)
+  textarea.focus()
+  textarea.select()
+
+  try {
+    return document.execCommand('copy')
+  } finally {
+    document.body.removeChild(textarea)
+  }
+}
 
 export default function ResultsSection({ diagnostic }: ResultsSectionProps) {
-  const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle')
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const copyTimeoutRef = useRef<number | null>(null)
   const stateClass = getStateClass(diagnostic.state)
   const bulletColor =
     diagnostic.state === 'green' ? '#22C55E' : diagnostic.state === 'yellow' ? '#FACC15' : '#EF4444'
 
   const handleCopyDiagnosticLink = async () => {
+    const diagnosticShareText = getDiagnosticShareText(diagnostic)
+
     try {
-      await navigator.clipboard.writeText(window.location.href)
-      setCopyState('copied')
+      const didCopy = await copyTextToClipboard(diagnosticShareText)
+      setCopyState(didCopy ? 'copied' : 'failed')
 
       if (copyTimeoutRef.current !== null) {
         window.clearTimeout(copyTimeoutRef.current)
@@ -48,6 +125,7 @@ export default function ResultsSection({ diagnostic }: ResultsSectionProps) {
       }, 2000)
     } catch (error) {
       console.error('Failed to copy diagnostic link.', error)
+      setCopyState('failed')
     }
   }
 
@@ -87,7 +165,11 @@ export default function ResultsSection({ diagnostic }: ResultsSectionProps) {
               {'If scores do not match, you do not have alignment \u2014 you have interpretation.'}
             </p>
             <button className={styles.copyButton} onClick={handleCopyDiagnosticLink} type="button">
-              {copyState === 'copied' ? COPIED_CTA_LABEL : COPY_DIAGNOSTIC_LABEL}
+              {copyState === 'copied'
+                ? COPIED_CTA_LABEL
+                : copyState === 'failed'
+                  ? COPY_FAILED_CTA_LABEL
+                  : COPY_DIAGNOSTIC_LABEL}
             </button>
             <p className={styles.copyHelper}>{COPY_DIAGNOSTIC_HELPER}</p>
           </section>
@@ -168,7 +250,11 @@ export default function ResultsSection({ diagnostic }: ResultsSectionProps) {
               {diagnostic.content.primaryCtaLabel}
             </a>
             <button className={styles.secondaryButton} onClick={handleCopyDiagnosticLink} type="button">
-              {copyState === 'copied' ? COPIED_CTA_LABEL : COPY_DIAGNOSTIC_LABEL}
+              {copyState === 'copied'
+                ? COPIED_CTA_LABEL
+                : copyState === 'failed'
+                  ? COPY_FAILED_CTA_LABEL
+                  : COPY_DIAGNOSTIC_LABEL}
             </button>
             <p className={styles.copyHelper}>{COPY_DIAGNOSTIC_HELPER}</p>
           </div>

@@ -32,7 +32,7 @@ const publicKey = env.VITE_EMAILJS_PUBLIC_KEY
 const serviceId = env.VITE_EMAILJS_SERVICE_ID
 const templateUserId = env.VITE_EMAILJS_TEMPLATE_USER_ID
 const templateOwnerId = env.VITE_EMAILJS_TEMPLATE_OWNER_ID
-const calendlyLink = 'https://calendly.com/sellxsellrev'
+const calendlyLink = 'https://calendly.com/sellxsellrev/30min'
 
 export const emailConfigurationReady = Boolean(
   publicKey && serviceId && templateUserId && templateOwnerId,
