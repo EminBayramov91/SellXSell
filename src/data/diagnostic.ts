@@ -56,8 +56,8 @@ export interface CalculatedDiagnostic {
 export const OWNER_EMAIL = 'shelley@sellxsell.com'
 
 export const CTA_LINKS = {
-  primary: 'https://calendly.com/sellxsellrev/30min',
-  secondary: 'https://calendly.com/sellxsellrev/30min',
+  primary: 'https://calendly.com/sellxsellrev/new-meeting',
+  secondary: 'https://calendly.com/sellxsellrev/new-meeting',
 }
 
 export const LEAD_ROLE_OPTIONS: LeadRole[] = ['CRO', 'CFO', 'CEO', 'VP Sales', 'Other']
